@@ -566,6 +566,14 @@
                 maxTokens: 1024
             };
             document.getElementById('apiSetupModal').classList.add('hidden');
+
+            // 부모 페이지(index.html)에 API 키 저장 알림
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'SAVE_API_KEY',
+                    apiKey: apiKey
+                }, '*');
+            }
         }
 
         // 분석 요청
@@ -881,6 +889,22 @@ ${requesterName ? `5. 요청자: ${requesterName}` : ''}
             };
             return text.replace(/[&<>"']/g, m => map[m]);
         }
+
+        // 부모 페이지에서 보낸 메시지 수신 (다른 탭에서 저장한 API 키)
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'API_KEY_UPDATED') {
+                const apiKey = event.data.apiKey;
+                if (apiKey) {
+                    CONFIG = {
+                        claudeApiKey: apiKey,
+                        model: 'claude-sonnet-4-6',
+                        maxTokens: 1024
+                    };
+                    // 모달 닫기
+                    document.getElementById('apiSetupModal').classList.add('hidden');
+                }
+            }
+        });
 
         // 초기 로드
         document.addEventListener('DOMContentLoaded', () => {

@@ -141,6 +141,41 @@
     </div>
 
     <script>
+        // iframe에서 보낸 메시지 수신
+        window.addEventListener('message', (event) => {
+            // 보안: 같은 origin에서만 수신
+            if (event.origin !== window.location.origin) return;
+
+            if (event.data.type === 'SAVE_API_KEY') {
+                // iframe에서 API 키 저장 요청
+                const apiKey = event.data.apiKey;
+                localStorage.setItem('claudeApiKey', apiKey);
+
+                // 모든 iframe에 API 키 전달
+                broadcastApiKey(apiKey);
+            }
+        });
+
+        // 모든 iframe에 API 키 전달
+        function broadcastApiKey(apiKey) {
+            const scenarioFrame = document.getElementById('scenarioFrame');
+            const requestFrame = document.getElementById('requestFrame');
+
+            if (scenarioFrame && scenarioFrame.contentWindow) {
+                scenarioFrame.contentWindow.postMessage({
+                    type: 'API_KEY_UPDATED',
+                    apiKey: apiKey
+                }, '*');
+            }
+
+            if (requestFrame && requestFrame.contentWindow) {
+                requestFrame.contentWindow.postMessage({
+                    type: 'API_KEY_UPDATED',
+                    apiKey: apiKey
+                }, '*');
+            }
+        }
+
         function switchTab(tabName) {
             // 모든 탭 콘텐츠 숨기기
             const contents = document.querySelectorAll('.tab-content');
@@ -163,44 +198,12 @@
             // 로컬스토리지에 선택 저장
             localStorage.setItem('activeTab', tabName);
 
-            // 탭 전환 시 iframe 재로드해서 API 키 동기화
-            syncApiKeyToIframes();
-        }
-
-        // iframe들 간 API 키 동기화
-        function syncApiKeyToIframes() {
+            // 탭 전환 시 iframe에 현재 API 키 전달
             const apiKey = localStorage.getItem('claudeApiKey');
-            if (!apiKey) return;
-
-            // 약간의 지연 후 iframe이 로드되도록 함
-            setTimeout(() => {
-                try {
-                    // iframe 콘텐츠의 localStorage에 접근하여 API 키 설정
-                    const scenarioFrame = document.getElementById('scenarioFrame');
-                    if (scenarioFrame && scenarioFrame.contentWindow) {
-                        scenarioFrame.contentWindow.localStorage.setItem('claudeApiKey', apiKey);
-                    }
-                } catch (e) {
-                    // CORS 에러 무시
-                }
-
-                try {
-                    const requestFrame = document.getElementById('requestFrame');
-                    if (requestFrame && requestFrame.contentWindow) {
-                        requestFrame.contentWindow.localStorage.setItem('claudeApiKey', apiKey);
-                    }
-                } catch (e) {
-                    // CORS 에러 무시
-                }
-            }, 100);
-        }
-
-        // localStorage 변경 감지해서 iframe에 동기화
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'claudeApiKey') {
-                syncApiKeyToIframes();
+            if (apiKey) {
+                broadcastApiKey(apiKey);
             }
-        });
+        }
 
         // 페이지 로드 시 이전 탭 복원
         document.addEventListener('DOMContentLoaded', () => {
@@ -210,11 +213,11 @@
                 tabButton.click();
             }
 
-            // 페이지 로드 시에도 API 키 동기화
-            syncApiKeyToIframes();
-
-            // 주기적으로 API 키 동기화 (2초마다)
-            setInterval(syncApiKeyToIframes, 2000);
+            // 페이지 로드 시 API 키 전달
+            const apiKey = localStorage.getItem('claudeApiKey');
+            if (apiKey) {
+                setTimeout(() => broadcastApiKey(apiKey), 500);
+            }
         });
     </script>
 </body>
