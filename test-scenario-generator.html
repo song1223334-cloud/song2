@@ -918,8 +918,6 @@ ${(result.questions || []).join('\n')}`;
         function loadExample(type) {
             const exampleText = EXAMPLES[type] || EXAMPLES.signup;
             document.getElementById('requestText').value = exampleText;
-            document.getElementById('examplesDropdown').classList.add('hidden');
-            showSuccess('예제가 로드되었습니다. 분석 버튼을 클릭하세요');
         }
 
         // UI 헬퍼
