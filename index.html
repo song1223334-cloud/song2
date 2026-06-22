@@ -3,13 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>테스트 시나리오 생성 도구</title>
-    <script>
-        // test-scenario-generator.html로 리다이렉트
-        window.location.href = './test-scenario-generator.html';
-    </script>
+    <title>업무 도구 모음</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-button {
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tool-content {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            min-height: 600px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            border-radius: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    로딩 중...
+    <div class="container">
+        <header>
+            <h1>⚙️ AI 업무 도구 모음</h1>
+            <p>기획안 분석, 테스트 시나리오 생성, 회신 초안 작성</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('scenario')">
+                🧪 테스트 시나리오 생성
+            </button>
+            <button class="tab-button" onclick="switchTab('request')">
+                📧 업무 요청 분석
+            </button>
+        </div>
+
+        <!-- 테스트 시나리오 생성 탭 -->
+        <div id="scenario" class="tab-content active">
+            <iframe src="test-scenario-generator.html" title="테스트 시나리오 생성 도구"></iframe>
+        </div>
+
+        <!-- 업무 요청 분석 탭 -->
+        <div id="request" class="tab-content">
+            <iframe src="business-request-tool.html" title="업무 요청 분석 도구"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 모든 탭 콘텐츠 숨기기
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 모든 탭 버튼 비활성화
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // 선택된 탭 표시
+            document.getElementById(tabName).classList.add('active');
+
+            // 선택된 버튼 활성화
+            event.target.classList.add('active');
+
+            // 로컬스토리지에 선택 저장
+            localStorage.setItem('activeTab', tabName);
+        }
+
+        // 페이지 로드 시 이전 탭 복원
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTab = localStorage.getItem('activeTab') || 'scenario';
+            const tabButton = document.querySelector(`button[onclick="switchTab('${savedTab}')"]`);
+            if (tabButton) {
+                tabButton.click();
+            }
+        });
+    </script>
 </body>
 </html>
