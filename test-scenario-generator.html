@@ -433,7 +433,7 @@
     </style>
 </head>
 <body>
-    <!-- API 키 설정 모달 -->
+    <!-- API 키 설정 모달 (로컬 개발용) -->
     <div id="apiSetupModal" class="api-setup-modal hidden">
         <div class="api-setup-box">
             <h3>🔑 Claude API 키 설정</h3>
@@ -442,7 +442,7 @@
             <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
             <button onclick="saveApiKey()">저장하고 시작</button>
             <p style="font-size: 12px; color: #999; text-align: center; margin-top: 16px;">
-                API 키는 이 브라우저에만 저장됩니다 (서버에 전송 없음)
+                로컬 개발용입니다 (Vercel에서는 환경변수 사용)
             </p>
         </div>
     </div>
@@ -523,7 +523,21 @@
 
         // 설정 로드
         async function loadConfig() {
-            // 1. config.local.json 시도 (로컬 개발용)
+            // Vercel 환경 확인 (serverless API 사용)
+            const isVercel = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+            if (isVercel) {
+                // Vercel 환경: API 키 불필요 (serverless 함수 사용)
+                CONFIG = {
+                    claudeApiKey: 'vercel-proxy', // 더미 키 (실제로는 사용 안됨)
+                    model: 'claude-sonnet-4-6',
+                    maxTokens: 2000
+                };
+                return true;
+            }
+
+            // 로컬 개발 환경
+            // 1. config.local.json 시도
             try {
                 const response = await fetch('config.local.json');
                 if (response.ok) {
@@ -537,7 +551,7 @@
                 // config.local.json이 없으면 무시
             }
 
-            // 2. localStorage에서 로드 (웹 배포용)
+            // 2. localStorage에서 로드
             const savedKey = localStorage.getItem('claudeApiKey');
             if (savedKey && savedKey.trim() !== '') {
                 CONFIG = {
