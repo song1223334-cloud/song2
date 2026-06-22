@@ -1,0 +1,13 @@
+{
+  "buildCommand": "echo 'Static site with serverless functions'",
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ],
+  "env": [
+    "CLAUDE_API_KEY"
+  ]
+}

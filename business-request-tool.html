@@ -653,6 +653,12 @@
 
         // Claude API 호출
         async function callClaudeAPI(apiKey, systemPrompt, userMessage) {
+            // Vercel 배포 환경
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                return callClaudeViaProxy(systemPrompt, userMessage);
+            }
+
+            // 로컬 개발 환경 (직접 API 호출)
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: {
@@ -674,6 +680,28 @@
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error?.message || 'API 호출 실패');
+            }
+
+            const data = await response.json();
+            return data.content[0].text;
+        }
+
+        // Vercel serverless 함수를 통한 API 호출
+        async function callClaudeViaProxy(systemPrompt, userMessage) {
+            const response = await fetch('/api/claude', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    systemPrompt: systemPrompt,
+                    userMessage: userMessage
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'API 호출 실패');
             }
 
             const data = await response.json();
