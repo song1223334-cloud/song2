@@ -1,0 +1,21 @@
+{
+  "name": "song2-ai-tools",
+  "version": "1.0.0",
+  "description": "AI-powered business tools for scenario generation and request analysis",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "test": "echo 'No tests'",
+    "build": "echo 'Static site with serverless functions'"
+  },
+  "keywords": [
+    "AI",
+    "Claude",
+    "test-scenario",
+    "business-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
+}
