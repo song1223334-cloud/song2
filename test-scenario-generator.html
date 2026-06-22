@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테스트 시나리오 생성 도구</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 350px;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ee5a52;
+        }
+
+        .tips {
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .tips strong {
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .tips li {
+            margin-left: 16px;
+            margin-bottom: 4px;
+        }
+
+        .result-section {
+            margin-bottom: 28px;
+        }
+
+        .result-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-content {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            line-height: 1.8;
+        }
+
+        .result-content p {
+            color: #555;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .result-content ul, .result-content ol {
+            margin-left: 20px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .result-content li {
+            margin-bottom: 8px;
+        }
+
+        .result-content li strong {
+            color: #333;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #f5c6cb;
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #c3e6cb;
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .result-area {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .result-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .result-area::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .result-area::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .result-area::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .copy-button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+        }
+
+        .api-setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .api-setup-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .api-setup-box h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .api-setup-box p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .api-setup-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .api-setup-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .api-setup-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .api-setup-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .api-setup-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-setup-box a:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state svg {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .api-key-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .api-key-input input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+
+        .api-key-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-key-input button {
+            width: auto;
+            min-width: 100px;
+            padding: 10px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .api-key-input button:hover {
+            background: #5568d3;
+        }
+
+        .api-help {
+            font-size: 12px;
+            color: #667eea;
+            margin-top: 8px;
+        }
+
+        .api-help a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-help a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- API 키 설정 모달 -->
+    <div id="apiSetupModal" class="api-setup-modal hidden">
+        <div class="api-setup-box">
+            <h3>🔑 Claude API 키 설정</h3>
+            <p>테스트 시나리오 생성을 위해 Claude API 키가 필요합니다.</p>
+            <p>🔗 <a href="https://console.anthropic.com/account/keys" target="_blank">여기서 API 키 발급받기</a></p>
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+            <button onclick="saveApiKey()">저장하고 시작</button>
+            <p style="font-size: 12px; color: #999; text-align: center; margin-top: 16px;">
+                API 키는 이 브라우저에만 저장됩니다 (서버에 전송 없음)
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🧪 테스트 시나리오 생성 도구</h1>
+            <p>기획안을 입력하면 AI가 자동으로 테스트 계획을 생성합니다</p>
+        </header>
+
+        <div class="layout">
+            <!-- 좌측: 입력 패널 -->
+            <div class="card">
+                <h2>📋 기획안 입력</h2>
+
+                <div class="input-section">
+                    <label>개발 요청서 / 기획안 내용</label>
+                    <textarea id="requestText" placeholder="개발 요청서나 기획안의 내용을 여기에 붙여넣으세요...&#10;&#10;예: &#10;• 사용자 회원가입 기능 추가&#10;• 이메일 검증 필수&#10;• 중복 가입 방지&#10;• 3개월 후 미인증 계정 자동 삭제"></textarea>
+
+                    <div class="button-group">
+                        <button class="btn-primary" id="analyzeBtn" onclick="analyzeRequest()">분석</button>
+                        <button class="btn-secondary" onclick="toggleExamples()">📚 예제</button>
+                        <button class="btn-secondary" onclick="clearInput()">초기화</button>
+                    </div>
+
+                    <div id="examplesDropdown" class="hidden" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn-secondary" style="font-size: 12px; padding: 8px;" onclick="loadExample('signup')">예제 1: 회원가입 기능</button>
+                        <button class="btn-secondary" style="font-size: 12px; padding: 8px;" onclick="loadExample('payment')">예제 2: 결제 시스템</button>
+                        <button class="btn-secondary" style="font-size: 12px; padding: 8px;" onclick="loadExample('search')">예제 3: 검색 기능</button>
+                        <button class="btn-secondary" style="font-size: 12px; padding: 8px;" onclick="loadExample('notification')">예제 4: 알림 시스템</button>
+                        <button class="btn-secondary" style="font-size: 12px; padding: 8px;" onclick="loadExample('export')">예제 5: 데이터 내보내기</button>
+                    </div>
+                </div>
+
+                <div class="tips">
+                    <strong>💡 사용 팁</strong>
+                    <ul>
+                        <li>최소 50자 이상의 기획안을 입력하세요</li>
+                        <li>개행, 마크다운, 표 형식 모두 가능합니다</li>
+                        <li>분석 시간은 약 3~5초 소요됩니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 우측: 결과 패널 -->
+            <div class="card">
+                <h2>✨ 테스트 계획</h2>
+
+                <div id="loadingState" class="hidden">
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <span class="loading"></span>
+                        <p style="margin-top: 16px; color: #999;">분석 중입니다...</p>
+                    </div>
+                </div>
+
+                <div id="emptyState">
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <p>기획안을 입력하고 분석 버튼을 클릭하세요</p>
+                    </div>
+                </div>
+
+                <div id="resultArea" class="hidden">
+                    <div class="copy-button-group">
+                        <button class="btn-primary" style="flex: 1;" onclick="copyResults()">📋 전체 결과 복사</button>
+                        <button class="btn-secondary" style="flex: 1;" onclick="startOver()">다시 분석</button>
+                    </div>
+
+                    <div class="result-area" id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+        let CONFIG = null;
+
+        // 설정 로드
+        async function loadConfig() {
+            // 1. config.local.json 시도 (로컬 개발용)
+            try {
+                const response = await fetch('config.local.json');
+                if (response.ok) {
+                    CONFIG = await response.json();
+                    if (CONFIG.claudeApiKey && CONFIG.claudeApiKey.trim() !== '') {
+                        localStorage.setItem('claudeApiKey', CONFIG.claudeApiKey);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                // config.local.json이 없으면 무시
+            }
+
+            // 2. localStorage에서 로드 (웹 배포용)
+            const savedKey = localStorage.getItem('claudeApiKey');
+            if (savedKey && savedKey.trim() !== '') {
+                CONFIG = {
+                    claudeApiKey: savedKey,
+                    model: 'claude-sonnet-4-6',
+                    maxTokens: 2000
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        // API 호출
+        async function callClaudeAPI(apiKey, prompt) {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: CONFIG.model || 'claude-sonnet-4-6',
+                    max_tokens: CONFIG.maxTokens || 2000,
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('API Error:', error);
+                throw new Error(error.error?.message || 'API 호출 실패');
+            }
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (!data.content || !data.content[0] || !data.content[0].text) {
+                console.error('Invalid response structure:', data);
+                throw new Error('API 응답 형식이 잘못되었습니다');
+            }
+
+            return data.content[0].text;
+        }
+
+        // 프롬프트 생성
+        function generatePrompt(requestText) {
+            return `Analyze this development request and output ONLY valid JSON. No other text.
+
+Development Request:
+${requestText}
+
+Output this JSON structure exactly. Do not add any other text before or after:
+
+{
+  "summary": "2-3 sentence summary in Korean of what needs to be tested",
+  "scenarios": ["1. Main scenario - brief description", "2. Another scenario - brief description", "3. Scenario - description", "4. Scenario - description", "5. Scenario - description"],
+  "normalCases": ["- Expected behavior case 1", "- Expected behavior case 2", "- Expected behavior case 3", "- Expected behavior case 4", "- Expected behavior case 5"],
+  "exceptionCases": ["- Error situation 1 → Expected result", "- Error situation 2 → Expected result", "- Error situation 3 → Expected result", "- Error situation 4 → Expected result"],
+  "checklist": ["☐ Item 1 to verify", "☐ Item 2 to verify", "☐ Item 3 to verify", "☐ Item 4 to verify"],
+  "questions": ["Q. Question 1", "Q. Question 2", "Q. Question 3"]
+}
+
+CRITICAL: Output ONLY the JSON. No markdown. No explanation. Just the JSON object.`;
+        }
+
+        // 분석 시작
+        async function analyzeRequest() {
+            const requestText = document.getElementById('requestText').value.trim();
+
+            clearMessages();
+
+            if (!CONFIG || !CONFIG.claudeApiKey) {
+                showError('API 키가 설정되지 않았습니다. config.local.json을 확인하세요');
+                return;
+            }
+
+            if (!requestText || requestText.length < 50) {
+                showError('최소 50자 이상의 기획안을 입력하세요');
+                return;
+            }
+
+            // UI 변경
+            const btn = document.getElementById('analyzeBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 분석 중...';
+
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+
+            try {
+                const prompt = generatePrompt(requestText);
+                const response = await callClaudeAPI(CONFIG.claudeApiKey, prompt);
+
+                console.log('Full Response:', response);
+
+                // JSON 파싱 - 가장 큰 JSON 블록 찾기
+                let result = null;
+                try {
+                    // 1. 먼저 전체 응답을 JSON으로 파싱 시도
+                    result = JSON.parse(response);
+                } catch (e1) {
+                    // 2. 응답 내에서 JSON 블록 찾기
+                    const jsonMatch = response.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        try {
+                            result = JSON.parse(jsonMatch[0]);
+                        } catch (e2) {
+                            console.error('JSON Parse Error:', e2);
+                            throw new Error('응답이 유효한 JSON이 아닙니다.');
+                        }
+                    } else {
+                        throw new Error('응답에서 JSON을 찾을 수 없습니다.');
+                    }
+                }
+
+                // 필수 필드 확인
+                if (!result.summary || !result.scenarios || !result.normalCases ||
+                    !result.exceptionCases || !result.checklist || !result.questions) {
+                    throw new Error('응답 형식이 완전하지 않습니다.');
+                }
+
+                displayResults(result);
+                showSuccess('테스트 계획이 생성되었습니다');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('오류: ' + error.message + ' (개발자 도구 콘솔을 확인하세요)');
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('loadingState').classList.add('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 결과 표시
+        function displayResults(result) {
+            const container = document.getElementById('resultsContainer');
+
+            const html = `
+                <div class="result-section">
+                    <div class="result-title">📝 기능 요약</div>
+                    <div class="result-content">
+                        <p>${(result.summary || '').replace(/\n/g, '<br>')}</p>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">🎯 주요 테스트 시나리오</div>
+                    <div class="result-content">
+                        <ol>
+                            ${(result.scenarios || []).map(s => `<li><strong>${s}</strong></li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">✅ 정상 케이스</div>
+                    <div class="result-content">
+                        <ul>
+                            ${(result.normalCases || []).map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">⚠️ 예외 케이스</div>
+                    <div class="result-content">
+                        <ul>
+                            ${(result.exceptionCases || []).map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">☑️ 검수 체크리스트</div>
+                    <div class="result-content">
+                        <ul>
+                            ${(result.checklist || []).map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">❓ 추가 확인 질문</div>
+                    <div class="result-content">
+                        <ul>
+                            ${(result.questions || []).map(q => `<li>${q}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('resultArea').classList.remove('hidden');
+
+            // 전체 결과 저장 (복사용)
+            window.currentResult = result;
+        }
+
+        // 결과 복사
+        function copyResults() {
+            if (!window.currentResult) return;
+
+            const result = window.currentResult;
+            const text = `【 테스트 시나리오 생성 결과 】
+
+📝 기능 요약
+${result.summary || ''}
+
+🎯 주요 테스트 시나리오
+${(result.scenarios || []).map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+✅ 정상 케이스
+${(result.normalCases || []).join('\n')}
+
+⚠️ 예외 케이스
+${(result.exceptionCases || []).join('\n')}
+
+☑️ 검수 체크리스트
+${(result.checklist || []).join('\n')}
+
+❓ 추가 확인 질문
+${(result.questions || []).join('\n')}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('결과가 클립보드에 복사되었습니다');
+            });
+        }
+
+        // 예제 데이터
+        const EXAMPLES = {
+            signup: `사용자 회원가입 기능 추가
+
+개발 요구사항:
+- 이메일을 통한 사용자 가입 기능
+- 이메일 검증 필수 (인증 링크 발송, 24시간 유효)
+- 동일 이메일 중복 가입 방지
+- 비밀번호는 최소 8자, 영문+숫자+특수문자 포함 필수
+- 가입 후 자동 로그인
+- 이용약관 및 개인정보처리방침 동의 필수
+- 3개월간 미인증 계정 자동 삭제
+- 에러 메시지는 한국어로 표시
+
+추가 고려사항:
+- 메일 서버 지연 시 재전송 기능
+- 이메일 확인 버튼 클릭 후 중복 클릭 처리
+- 사내 이메일만 가입 가능 (@company.com)
+- 프로필 사진 선택적 업로드
+- 마케팅 수신 동의 선택사항`,
+
+            payment: `결제 시스템 개편
+
+개발 요구사항:
+- 결제 수단 추가: 신용카드, 계좌이체, 카카오페이
+- 최소 결제 금액: 1,000원, 최대: 10,000,000원
+- 결제 취소는 7일 이내만 가능 (결제 완료 후)
+- 결제 실패 시 3회 자동 재시도 (5초 간격)
+- 결제 수수료 계산 (카드 3%, 계좌 0%, 카카오페이 2%)
+- 영수증 이메일 자동 발송
+- 결제 내역 조회 및 영수증 다운로드
+- 부분 환불 지원
+
+추가 고려사항:
+- 결제 시 현재 환율 적용 (해외 카드)
+- 타임아웃 시나리오 처리 (30초)
+- 결제 중 브라우저 종료 시 복구
+- 동일 주문 중복 결제 방지 (1분 이내)`,
+
+            search: `상품 검색 기능 고도화
+
+개발 요구사항:
+- 검색어 자동완성 (입력 시 실시간)
+- 최근 검색어 저장 (최대 10개)
+- 검색 필터: 카테고리, 가격대, 평점, 판매자
+- 정렬: 관련도순, 최신순, 인기순, 낮은가격순, 높은가격순
+- 검색 결과 페이지네이션 (20개 단위)
+- 검색 결과 상태 표시 (전체 건수)
+- 검색 로그 기록 (분석용)
+- 빈 검색 결과 시 추천 상품 표시
+
+추가 고려사항:
+- 검색어 특수문자 처리
+- 동시 필터 적용 (3개 이상)
+- 검색 시간 제한 (최대 5초)
+- 오타 자동 수정 (입력값과 유사한 단어 제안)`,
+
+            notification: `알림 시스템 구축
+
+개발 요구사항:
+- 알림 유형: 주문, 배송, 리뷰, 공지사항, 프로모션
+- 알림 채널: 인앱 알림, 이메일, SMS, 푸시 알림
+- 알림 구독 설정 (사용자가 활성/비활성 선택)
+- 알림 히스토리 조회 (최대 90일)
+- 미읽음 알림 개수 표시
+- 알림 일괄 읽음 처리
+- 알림 삭제 (30일 후 자동 삭제)
+- 알림 예약 발송 (시간대별)
+
+추가 고려사항:
+- 중복 알림 방지 (1시간 내 동일 유형)
+- 알림 순서 (최신순)
+- 야간 시간대 알림 비활성화 (22:00 ~ 08:00)
+- 푸시 알림 허용 권한 확인`,
+
+            export: `데이터 내보내기 기능 추가
+
+개발 요구사항:
+- 내보내기 포맷: CSV, Excel, PDF
+- 내보내기 대상: 주문 목록, 배송 추적, 매출 통계
+- 날짜 범위 필터링 (시작일~종료일)
+- 선택적 필드 내보내기 (체크박스)
+- 비동기 처리 (5만 건 이상)
+- 진행률 표시
+- 완료 후 다운로드 링크 제공 (24시간 유효)
+- 내보내기 이력 조회
+
+추가 고려사항:
+- 대용량 파일 압축 처리 (1GB 이상)
+- 개인정보 마스킹 옵션
+- 내보내기 권한 검증
+- 동시 내보내기 요청 제한 (1인당 3개까지)`
+        };
+
+        // 예제 토글
+        function toggleExamples() {
+            const dropdown = document.getElementById('examplesDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // 예제 로드
+        function loadExample(type) {
+            const exampleText = EXAMPLES[type] || EXAMPLES.signup;
+            document.getElementById('requestText').value = exampleText;
+            document.getElementById('examplesDropdown').classList.add('hidden');
+            showSuccess('예제가 로드되었습니다. 분석 버튼을 클릭하세요');
+        }
+
+        // UI 헬퍼
+        function clearInput() {
+            document.getElementById('requestText').value = '';
+            clearMessages();
+        }
+
+        function startOver() {
+            document.getElementById('requestText').value = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+            clearMessages();
+        }
+
+        function showError(msg) {
+            console.error(msg);
+        }
+
+        function showSuccess(msg) {
+            console.log(msg);
+        }
+
+        function clearMessages() {
+            // 메시지 표시 안함
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('apiKey');
+            const button = event.target;
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '숨기기';
+            } else {
+                input.type = 'password';
+                button.textContent = '표시';
+            }
+        }
+
+        // API 키 저장
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('API 키를 입력하세요');
+                return;
+            }
+
+            if (!apiKey.startsWith('sk-ant-')) {
+                alert('올바른 Claude API 키 형식이 아닙니다');
+                return;
+            }
+
+            localStorage.setItem('claudeApiKey', apiKey);
+            CONFIG = {
+                claudeApiKey: apiKey,
+                model: 'claude-sonnet-4-6',
+                maxTokens: 2000
+            };
+            document.getElementById('apiSetupModal').classList.add('hidden');
+        }
+
+        // 엔터 키로도 저장
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveApiKey();
+            });
+        });
+
+        // 초기 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig().then(success => {
+                if (!success) {
+                    document.getElementById('apiSetupModal').classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>`;
