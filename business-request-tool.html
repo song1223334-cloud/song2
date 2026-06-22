@@ -294,6 +294,88 @@
             font-size: 13px;
         }
 
+        .api-setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .api-setup-modal.hidden {
+            display: none;
+        }
+
+        .api-setup-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .api-setup-box h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .api-setup-box p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .api-setup-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .api-setup-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .api-setup-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .api-setup-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .api-setup-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-setup-box a:hover {
+            text-decoration: underline;
+        }
+
         .hidden {
             display: none;
         }
@@ -321,6 +403,20 @@
     </style>
 </head>
 <body>
+    <!-- API 키 설정 모달 -->
+    <div id="apiSetupModal" class="api-setup-modal">
+        <div class="api-setup-box">
+            <h3>🔑 Claude API 키 설정</h3>
+            <p>업무 요청 분석을 위해 Claude API 키가 필요합니다.</p>
+            <p>🔗 <a href="https://console.anthropic.com/account/keys" target="_blank">여기서 API 키 발급받기</a></p>
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+            <button onclick="saveApiKey()">저장하고 시작</button>
+            <p style="font-size: 12px; color: #999; text-align: center; margin-top: 16px;">
+                API 키는 이 브라우저에만 저장됩니다 (서버에 전송 없음)
+            </p>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>📧 업무 요청 분석·회신 초안 작성</h1>
@@ -332,18 +428,8 @@
             <div class="card">
                 <h2>📝 요청 입력</h2>
 
-                <div class="api-key-section">
-                    <strong>🔑 Claude API 키 필요</strong><br>
-                    <a href="https://console.anthropic.com/account/keys" target="_blank" style="color: #856404;">여기서 API 키를 발급받으세요</a>
-                </div>
-
                 <div id="errorMessage" class="error hidden"></div>
                 <div id="successMessage" class="success hidden"></div>
-
-                <div class="input-group">
-                    <label>API 키</label>
-                    <input type="text" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
-                </div>
 
                 <div class="input-group">
                     <label>업무 요청 내용</label>
@@ -428,20 +514,69 @@
     </div>
 
     <script>
-        // 상수
+        let CONFIG = null;
         const STORAGE_KEY = 'businessRequests';
         const API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
+        // 설정 로드
+        async function loadConfig() {
+            try {
+                const response = await fetch('config.local.json');
+                if (response.ok) {
+                    CONFIG = await response.json();
+                    if (CONFIG.claudeApiKey && CONFIG.claudeApiKey.trim() !== '') {
+                        localStorage.setItem('claudeApiKey', CONFIG.claudeApiKey);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                // config.local.json이 없으면 무시
+            }
+
+            const savedKey = localStorage.getItem('claudeApiKey');
+            if (savedKey && savedKey.trim() !== '') {
+                CONFIG = {
+                    claudeApiKey: savedKey,
+                    model: 'claude-sonnet-4-6',
+                    maxTokens: 1024
+                };
+                return true;
+            }
+
+            return false;
+        }
+
+        // API 키 저장
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('API 키를 입력하세요');
+                return;
+            }
+
+            if (!apiKey.startsWith('sk-ant-')) {
+                alert('올바른 Claude API 키 형식이 아닙니다');
+                return;
+            }
+
+            localStorage.setItem('claudeApiKey', apiKey);
+            CONFIG = {
+                claudeApiKey: apiKey,
+                model: 'claude-sonnet-4-6',
+                maxTokens: 1024
+            };
+            document.getElementById('apiSetupModal').classList.add('hidden');
+        }
+
         // 분석 요청
         async function analyzeRequest() {
-            const apiKey = document.getElementById('apiKey').value.trim();
             const requestText = document.getElementById('requestText').value.trim();
             const requesterName = document.getElementById('requesterName').value.trim();
             const tonStyle = document.getElementById('tonStyle').value;
 
             // 검증
-            if (!apiKey) {
-                showError('API 키를 입력하세요');
+            if (!CONFIG || !CONFIG.claudeApiKey) {
+                showError('API 키가 설정되지 않았습니다');
                 return;
             }
             if (!requestText) {
@@ -476,7 +611,7 @@
 다른 텍스트는 포함하지 말고 JSON만 반환하세요.`;
 
                 const analysisResponse = await callClaudeAPI(
-                    apiKey,
+                    CONFIG.claudeApiKey,
                     systemPrompt,
                     requestText
                 );
@@ -485,7 +620,7 @@
 
                 // 회신 초안 생성
                 const replyPrompt = generateReplyPrompt(analysis, tonStyle, requesterName);
-                const replyDraft = await callClaudeAPI(apiKey, replyPrompt, requestText);
+                const replyDraft = await callClaudeAPI(CONFIG.claudeApiKey, replyPrompt, requestText);
 
                 // UI 업데이트
                 displayAnalysis(analysis, replyDraft);
@@ -749,7 +884,19 @@ ${requesterName ? `5. 요청자: ${requesterName}` : ''}
 
         // 초기 로드
         document.addEventListener('DOMContentLoaded', () => {
+            // API 키 설정 확인
+            loadConfig().then(success => {
+                if (!success) {
+                    document.getElementById('apiSetupModal').classList.remove('hidden');
+                }
+            });
+
             loadRequests();
+
+            // 엔터 키로 API 키 저장
+            document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveApiKey();
+            });
 
             // 검색 실시간 필터링
             document.getElementById('searchInput').addEventListener('input', loadRequests);
