@@ -131,12 +131,12 @@
 
         <!-- 테스트 시나리오 생성 탭 -->
         <div id="scenario" class="tab-content active">
-            <iframe src="test-scenario-generator.html" title="테스트 시나리오 생성 도구"></iframe>
+            <iframe id="scenarioFrame" src="test-scenario-generator.html" title="테스트 시나리오 생성 도구" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
         </div>
 
         <!-- 업무 요청 분석 탭 -->
         <div id="request" class="tab-content">
-            <iframe src="business-request-tool.html" title="업무 요청 분석 도구"></iframe>
+            <iframe id="requestFrame" src="business-request-tool.html" title="업무 요청 분석 도구" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
         </div>
     </div>
 
@@ -162,7 +162,45 @@
 
             // 로컬스토리지에 선택 저장
             localStorage.setItem('activeTab', tabName);
+
+            // 탭 전환 시 iframe 재로드해서 API 키 동기화
+            syncApiKeyToIframes();
         }
+
+        // iframe들 간 API 키 동기화
+        function syncApiKeyToIframes() {
+            const apiKey = localStorage.getItem('claudeApiKey');
+            if (!apiKey) return;
+
+            // 약간의 지연 후 iframe이 로드되도록 함
+            setTimeout(() => {
+                try {
+                    // iframe 콘텐츠의 localStorage에 접근하여 API 키 설정
+                    const scenarioFrame = document.getElementById('scenarioFrame');
+                    if (scenarioFrame && scenarioFrame.contentWindow) {
+                        scenarioFrame.contentWindow.localStorage.setItem('claudeApiKey', apiKey);
+                    }
+                } catch (e) {
+                    // CORS 에러 무시
+                }
+
+                try {
+                    const requestFrame = document.getElementById('requestFrame');
+                    if (requestFrame && requestFrame.contentWindow) {
+                        requestFrame.contentWindow.localStorage.setItem('claudeApiKey', apiKey);
+                    }
+                } catch (e) {
+                    // CORS 에러 무시
+                }
+            }, 100);
+        }
+
+        // localStorage 변경 감지해서 iframe에 동기화
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'claudeApiKey') {
+                syncApiKeyToIframes();
+            }
+        });
 
         // 페이지 로드 시 이전 탭 복원
         document.addEventListener('DOMContentLoaded', () => {
@@ -171,6 +209,12 @@
             if (tabButton) {
                 tabButton.click();
             }
+
+            // 페이지 로드 시에도 API 키 동기화
+            syncApiKeyToIframes();
+
+            // 주기적으로 API 키 동기화 (2초마다)
+            setInterval(syncApiKeyToIframes, 2000);
         });
     </script>
 </body>
